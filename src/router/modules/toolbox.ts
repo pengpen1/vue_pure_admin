@@ -11,7 +11,7 @@ export default {
     {
       path: "/toolbox/character",
       name: "character",
-      component: () => import("@/views/toolbox/character/character.vue"),
+      component: () => import("@/views/toolbox/character/index.vue"),
       meta: {
         title: "字符串格式化"
       }
@@ -19,7 +19,7 @@ export default {
     {
       path: "/toolbox/draw",
       name: "draw",
-      component: () => import("@/views/toolbox/draw/character.vue"),
+      component: () => import("@/views/toolbox/draw/index.vue"),
       meta: {
         title: "绘图"
       }
@@ -27,7 +27,7 @@ export default {
     {
       path: "/toolbox/degraded",
       name: "degraded",
-      component: () => import("@/views/toolbox/degraded/degraded.vue"),
+      component: () => import("@/views/toolbox/degraded/index.vue"),
       meta: {
         title: "图片降质"
       }
