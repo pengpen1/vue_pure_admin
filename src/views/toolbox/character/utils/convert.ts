@@ -19,11 +19,15 @@ export const capitalizeWords = (text: string, delimiter = " ") => {
     .join(delimiter);
 };
 // 加分割符，默认下划线
-export const toUnderline = (text: string, delimiter = "_") => {
+export const toUnderline = (text: string, separator = " ", delimiter = "_") => {
   return text
-    .split(" ")
+    .split(separator)
     .map(word => word.toLowerCase())
     .join(delimiter);
+};
+// 是否由下划线拼接
+export const isUnderScored = str => {
+  return /^([a-zA-Z]+_)*[a-zA-Z]+$/.test(str);
 };
 // 转驼峰
 export const camelize = (str: string) => {
