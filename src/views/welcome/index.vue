@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import echarts from "@/plugins/echarts";
-import { ref, reactive, toRaw, onMounted, onBeforeUnmount } from "vue";
+import { onMounted } from "vue";
 
 defineOptions({
   name: "Welcome"
@@ -232,7 +232,7 @@ function focusOnMouse(e) {
 <style lang="scss" scoped>
 .welcome {
   box-sizing: border-box;
-  height: calc(100vh - 111px);
+  height: calc(100vh - 134px);
   overflow: hidden;
   background-color: #111;
   perspective: 1000px;

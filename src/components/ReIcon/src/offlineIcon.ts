@@ -8,7 +8,13 @@ import { addIcon } from "@iconify/vue/dist/offline";
 import HomeFilled from "@iconify-icons/ep/home-filled";
 import InformationLine from "@iconify-icons/ri/information-line";
 import Lollipop from "@iconify-icons/ep/lollipop";
+import moonNight from "@iconify-icons/ep/moon-night";
+import orange from "@iconify-icons/ep/orange";
+import flag from "@iconify-icons/ep/flag";
 
 addIcon("homeFilled", HomeFilled);
 addIcon("informationLine", InformationLine);
 addIcon("lollipop", Lollipop);
+addIcon("moonNight", moonNight);
+addIcon("orange", orange);
+addIcon("flag", flag);
