@@ -8,3 +8,8 @@ declare module "*.scss" {
   const scss: Record<string, string>;
   export default scss;
 }
+
+declare module "@types/three";
+declare module "three/addons/loaders/GLTFLoader.js";
+declare module "three/addons/controls/OrbitControls.js";
+declare module "three/addons/controls/DragControls.js";
