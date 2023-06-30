@@ -2,7 +2,10 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { DragControls } from "three/addons/controls/DragControls.js";
+import Stats from "three/addons/libs/stats.module.js";
+import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
+const api = { state: "Walking" };
 type lightParams = {
   type?: string;
   color: string | number;
@@ -15,6 +18,7 @@ export class ThreeJs {
   scene: THREE.Scene | null = null;
   camera: THREE.PerspectiveCamera | null = null;
   renderer: THREE.WebGLRenderer | null = null;
+  clock: THREE.Clock | null;
   orbitcontrols: any;
   dragControls: any;
   ambientLight: THREE.AmbientLight | null = null;
@@ -22,9 +26,18 @@ export class ThreeJs {
   line: THREE.Line | null = null;
   pointLight: THREE.PointLight | null = null;
   container: HTMLElement | null = null;
+  model: any;
+  animations: any;
+  stats: any;
+  mixer: any;
+  emoteFolder: any;
+  actions: any;
+  activeAction: any;
+  previousAction: any;
 
   constructor(container: HTMLElement) {
     this.container = container;
+    this.clock = new THREE.Clock();
     this.init();
   }
 
@@ -37,7 +50,7 @@ export class ThreeJs {
     this.setCube();
     this.setPointLight();
     this.setDragControls();
-    this.setLine();
+    // this.setLine();
     this.setModel();
     this.setGround();
     this.setLight({
@@ -54,6 +67,7 @@ export class ThreeJs {
     //   strength: 3,
     //   position: [0, 20, 0]
     // });
+    this.setStats();
     this.animate();
   }
   // 新建场景
@@ -272,6 +286,7 @@ export class ThreeJs {
         "/models/RobotExpressive.glb",
         function (gltf) {
           this.model = gltf.scene;
+          this.animations = gltf.animations;
           // this.model.castShadow = true;
           // 使用模型的traverse方法遍历模型的所有子对象，并对其中的Mesh类型对象设置castShadow属性为true。
           this.model.traverse(function (object) {
@@ -279,6 +294,8 @@ export class ThreeJs {
           });
           // this.model.position.set(0, 2, 2);
           this.scene.add(this.model);
+          // GUI
+          this.setGUI(this.model, this.animations);
         }.bind(this),
         undefined,
         function (e) {
@@ -288,23 +305,164 @@ export class ThreeJs {
     }
   }
 
+  // 帧率统计
+  setStats(): void {
+    if (this.container) {
+      this.stats = new Stats();
+      //设置统计模式
+      this.stats.setMode(0); // 0: fps帧率, 1: ms 渲染时间, 2: mb内存使用量
+      //统计信息显示在左上角
+      this.stats.domElement.style.position = "absolute";
+      this.stats.domElement.style.left = "24px";
+      this.stats.domElement.style.right = "unset";
+      this.stats.domElement.style.top = "unset";
+      this.stats.domElement.style.bottom = "24px";
+      this.container.appendChild(this.stats.dom);
+    }
+  }
+
+  // 新建操作UI
+  setGUI(model, animations): void {
+    const states = [
+      "Idle",
+      "Walking",
+      "Running",
+      "Dance",
+      "Death",
+      "Sitting",
+      "Standing"
+    ];
+    const emotes = ["Jump", "Yes", "No", "Wave", "Punch", "ThumbsUp"];
+
+    const gui = new GUI();
+    gui.domElement.style.right = "24px";
+    gui.domElement.style.top = "110px";
+    this.container.appendChild(gui.domElement);
+    // 建立动画混合器
+    this.mixer = new THREE.AnimationMixer(model);
+    this.actions = {};
+    // console.log("animations", animations);
+    for (let i = 0; i < animations.length; i++) {
+      // 遍历，拿到所有的动画剪辑
+      const clip = animations[i];
+      // 创建动画操作
+      const action = this.mixer.clipAction(clip);
+      // 存储动画操作
+      this.actions[clip.name] = action;
+
+      if (emotes.indexOf(clip.name) >= 0 || states.indexOf(clip.name) >= 4) {
+        // 对特定动画操作进行属性设置
+        action.clampWhenFinished = true; //播放完后保留在最后一个关键帧，而不是回到起始状态
+        action.loop = THREE.LoopOnce; //表示动画只播放一次
+      }
+    }
+
+    // states
+    // 建立文件夹
+    const statesFolder = gui.addFolder("States");
+    // state名字是可以换的
+    const clipCtrl = statesFolder.add(api, "state").options(states);
+    clipCtrl.onChange(
+      function () {
+        this.fadeToAction(api.state, 0.5);
+      }.bind(this)
+    );
+    statesFolder.close();
+
+    // emotes
+    this.emoteFolder = gui.addFolder("Emotes");
+
+    for (let i = 0; i < emotes.length; i++) {
+      // 模样回调
+      this.createEmoteCallback(emotes[i]);
+    }
+    // open默认展开，close默认折叠
+    // this.emoteFolder.open();
+    this.emoteFolder.close();
+
+    // expressions
+    const face = model.getObjectByName("Head_4"); //根据名称查找和获取模型中的一个子对象
+    const expressions = Object.keys(face.morphTargetDictionary); //获取所有表情
+    const expressionFolder = gui.addFolder("Expressions");
+
+    for (let i = 0; i < expressions.length; i++) {
+      // 参数：被控制的对象（数组）,控制选项对应的数组索引,表示面部表情权重的最小值,表情权重的最大值,表示面部表情权重的步长
+      expressionFolder
+        .add(face.morphTargetInfluences, i, 0, 1, 0.01)
+        .name(expressions[i]);
+    }
+    // 默认播放Dance
+    this.activeAction = this.actions["Walking"];
+    this.activeAction.play();
+    expressionFolder.open();
+  }
+  // 创建动作回调
+  createEmoteCallback(name) {
+    // 绑定对应事件到api
+    api[name] = function () {
+      this.fadeToAction(name, 0.2);
+      this.mixer.addEventListener("finished", this.restoreState.bind(this));
+    }.bind(this);
+    // 创建交互按钮
+    this.emoteFolder.add(api, name);
+  }
+
+  // 还原状态
+  restoreState() {
+    this.mixer.removeEventListener("finished", this.restoreState);
+    // 总是还原回当前的state
+    this.fadeToAction(api.state, 0.2);
+  }
+
+  // 实现现动画之间的平滑过渡
+  fadeToAction(name, duration): void {
+    this.previousAction = this.activeAction;
+    this.activeAction = this.actions[name];
+
+    // 淡出之前的动画
+    if (this.previousAction !== this.activeAction) {
+      this.previousAction.fadeOut(duration);
+    }
+
+    // 淡入当前动画
+    this.activeAction
+      .reset() //重置状态
+      .setEffectiveTimeScale(1) //设置时间比例，值为0时会使动画暂停。值为负数时动画会反向执行。默认值是1
+      .setEffectiveWeight(1) //权重，动作的影响程度 (取值范围[0, 1]). 0 (无影响)到1（完全影响）之间的值可以用来混合多个动作。默认值是1
+      .fadeIn(duration)
+      .play();
+  }
+
   // 渲染
   render(): void {
     if (this.renderer && this.scene && this.camera) {
       this.renderer.render(this.scene, this.camera);
     }
   }
-
   // 动画循环
   animate(): void {
     if (this.mesh) {
       requestAnimationFrame(this.animate.bind(this));
-      // 使模型绕着 X 轴旋转,0.01 是表示每一帧的旋转角度
-      this.mesh.rotation.x += 0.01;
-      this.mesh.rotation.y += 0.01;
-      this.mesh.rotation.z += 0.01;
+      // 使网格模型绕着 X 轴旋转,0.01 是表示每一帧的旋转角度
+      if (this.mesh) {
+        this.mesh.rotation.x += 0.01;
+        this.mesh.rotation.y += 0.01;
+        this.mesh.rotation.z += 0.01;
+      }
+
       // 更新控制器
-      this.orbitcontrols.update();
+      if (this.orbitcontrols) {
+        this.orbitcontrols.update();
+      }
+      // 统计 stats 对象画面何时被重新渲染，需要在重新渲染时调用 stats.update()
+      if (this.stats) {
+        this.stats.update();
+      }
+      //获取上一帧到当前帧的时间差
+      const dt = this.clock.getDelta();
+
+      // 动画混合器平滑的更新和混合动画
+      if (this.mixer) this.mixer.update(dt);
       // 调用 render() 方法来进行场景的渲染
       this.render();
     }

@@ -1,13 +1,65 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, onBeforeUnmount } from "vue";
 import { ThreeJs } from "./hooks/useThree";
 defineOptions({
   name: "test"
 });
 
+// 容器与three实例
 const containerEl = ref<HTMLElement>();
+let tsetThree: any = null;
+
+// resize事件
+const resizeHandle = () => {
+  console.log("resize");
+  const width = containerEl.value
+    ? containerEl.value.clientWidth
+    : window.innerWidth;
+  const height = containerEl.value
+    ? containerEl.value.clientHeight
+    : window.innerHeight;
+  tsetThree.camera.aspect = width / height;
+  tsetThree.camera.updateProjectionMatrix();
+  tsetThree.renderer.setSize(width, height);
+};
+
+// keyDown事件
+const moveDistance = 1; // 每次移动的距离
+const keyDownHandle = event => {
+  if (tsetThree) {
+    switch (event.keyCode) {
+      case 37: // 左箭头键
+        // tsetThree.fadeToAction("Walking", 0.2);
+        tsetThree.model.position.x -= moveDistance;
+        break;
+      case 38: // 上箭头键
+        // tsetThree.fadeToAction("Jump", 0.2);
+        tsetThree.model.position.z -= moveDistance;
+        break;
+      case 39: // 右箭头键
+        // tsetThree.fadeToAction("Dance", 0.2);
+        tsetThree.model.position.x += moveDistance;
+        break;
+      case 40: // 下箭头键
+        //   tsetThree.fadeToAction("Idle", 0.2);
+        tsetThree.model.position.z += moveDistance;
+        break;
+      default:
+        break;
+    }
+  }
+};
+
+// 生命周期
 onMounted(() => {
-  new ThreeJs(containerEl.value);
+  tsetThree = new ThreeJs(containerEl.value);
+  window.addEventListener("resize", resizeHandle);
+  window.addEventListener("keydown", keyDownHandle);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", resizeHandle);
+  window.removeEventListener("keydown", keyDownHandle);
 });
 </script>
 
@@ -29,7 +81,7 @@ onMounted(() => {
 .test {
   .title {
     position: absolute;
-    top: 20px;
+    top: 24px;
     right: 50%;
     transform: translateX(50%);
     text-align: left;
@@ -47,6 +99,11 @@ onMounted(() => {
   // 用container会和全局样式起冲突
   .containerEl {
     height: calc(100vh - 134px);
+  }
+  // 状态下拉样式修改
+  :deep(.lil-gui .widget select) {
+    background-color: #ebe8b4;
+    color: black;
   }
 }
 </style>
