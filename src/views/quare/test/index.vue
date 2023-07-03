@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, onBeforeUnmount } from "vue";
 import { ThreeJs } from "./hooks/useThree";
+import { throttle } from "@/utils/utils";
+
 defineOptions({
   name: "test"
 });
@@ -23,32 +25,119 @@ const resizeHandle = () => {
   tsetThree.renderer.setSize(width, height);
 };
 
+// 根据前后键码计算出要旋转的弧度
+const setRotation = (currentRotation, preRotation, rotationObj) => {
+  let radian = ((preRotation - currentRotation) * Math.PI) / 2;
+  const duration = 800;
+  console.log("旋转", radian);
+  if (radian) {
+    // 这个设置是让旋转3*90°的行为转换为逆过来旋转90°，贴近生活
+    if (Math.abs(preRotation - currentRotation) === 3) {
+      radian = -(radian / 3);
+    }
+    tsetThree.setTweens(
+      rotationObj,
+      {
+        y: rotationObj.y + radian
+      },
+      duration
+    );
+    return true;
+  }
+};
 // keyDown事件
-const moveDistance = 1; // 每次移动的距离
-const keyDownHandle = event => {
+let preRotation = 40; //之前朝向的键码，默认朝下,40
+let moveDistance = 1; // 每次移动的距离
+const keyDownHandle = throttle(event => {
   if (tsetThree) {
     switch (event.keyCode) {
+      case 65:
       case 37: // 左箭头键
         // tsetThree.fadeToAction("Walking", 0.2);
-        tsetThree.model.position.x -= moveDistance;
+        // 成功进行转向动作就不进行移动动作了
+        if (!setRotation(37, preRotation, tsetThree.model.rotation)) {
+          tsetThree.setTweens(
+            tsetThree.model.position,
+            {
+              x: tsetThree.model.position.x - moveDistance
+            },
+            1000
+          );
+        }
+        preRotation = 37;
+        // tsetThree.model.position.x -= moveDistance;
         break;
+      case 87:
       case 38: // 上箭头键
-        // tsetThree.fadeToAction("Jump", 0.2);
-        tsetThree.model.position.z -= moveDistance;
+        if (!setRotation(38, preRotation, tsetThree.model.rotation)) {
+          tsetThree.setTweens(
+            tsetThree.model.position,
+            {
+              z: tsetThree.model.position.z - moveDistance
+            },
+            1000
+          );
+        }
+        preRotation = 38;
+        // tsetThree.model.position.z -= moveDistance;
         break;
+      case 68:
       case 39: // 右箭头键
         // tsetThree.fadeToAction("Dance", 0.2);
-        tsetThree.model.position.x += moveDistance;
+        // 动画
+        console.log("动画过渡向右");
+        if (!setRotation(39, preRotation, tsetThree.model.rotation)) {
+          tsetThree.setTweens(
+            tsetThree.model.position,
+            {
+              x: tsetThree.model.position.x + moveDistance
+            },
+            1000
+          );
+        }
+        preRotation = 39;
+        // tsetThree.model.position.x += moveDistance;
         break;
+      case 83:
       case 40: // 下箭头键
         //   tsetThree.fadeToAction("Idle", 0.2);
-        tsetThree.model.position.z += moveDistance;
+        if (!setRotation(40, preRotation, tsetThree.model.rotation)) {
+          tsetThree.setTweens(
+            tsetThree.model.position,
+            {
+              z: tsetThree.model.position.z + moveDistance
+            },
+            1000
+          );
+        }
+        preRotation = 40;
+        // tsetThree.model.position.z += moveDistance;
+        break;
+      case 32: // 空格
+        tsetThree.fadeToAction("Jump", 0.2);
+        break;
+      case 73: // i
+        tsetThree.fadeToAction("Walking", 0.2);
+        moveDistance = 1;
+        break;
+      case 74: // j
+        tsetThree.fadeToAction("Punch", 0.2);
+        break;
+      case 75: // k
+        tsetThree.fadeToAction("ThumbsUp", 0.2);
+        break;
+      case 76: // l
+        tsetThree.fadeToAction("Wave", 0.2);
+        break;
+      case 79: // o
+        tsetThree.fadeToAction("Running", 0.2);
+        moveDistance = 4;
         break;
       default:
         break;
     }
   }
-};
+}, 800);
 
 // 生命周期
 onMounted(() => {
@@ -72,6 +161,9 @@ onBeforeUnmount(() => {
       进阶：控制器、粒子动效、阴影<br />
       晋级：场景交互、动态数据<br />
       晋升：建模<br />
+      <br />
+      操作介绍：w、a、s、d移动，j攻击，k点赞，l打招呼<br />
+      i走路模式，o跑步模式
     </p>
     <div ref="containerEl" class="containerEl" />
   </div>

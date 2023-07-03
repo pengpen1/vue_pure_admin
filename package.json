@@ -26,9 +26,11 @@
     "not op_mini all"
   ],
   "dependencies": {
+    "-": "^0.0.1",
     "@pureadmin/descriptions": "^1.1.1",
     "@pureadmin/table": "^2.2.0",
     "@pureadmin/utils": "^1.9.3",
+    "@tweenjs/tween.js": "^21.0.0",
     "@types/three": "^0.152.1",
     "@vueuse/core": "^10.1.2",
     "@vueuse/motion": "^2.0.0",

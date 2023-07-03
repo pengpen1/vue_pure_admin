@@ -4,6 +4,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 import { DragControls } from "three/addons/controls/DragControls.js";
 import Stats from "three/addons/libs/stats.module.js";
 import { GUI } from "three/addons/libs/lil-gui.module.min.js";
+import TWEEN from "@tweenjs/tween.js";
 
 const api = { state: "Walking" };
 type lightParams = {
@@ -433,6 +434,17 @@ export class ThreeJs {
       .play();
   }
 
+  // 增加tween缓动效果
+  setTweens(obj, newObj, duration = 1500) {
+    const ro = new TWEEN.Tween(obj); //创建tween动画实例
+    ro.to(newObj, duration); //变化后的对象以及动画持续时间
+    ro.easing(TWEEN.Easing.Linear.None); //动画缓动函数
+    ro.onUpdate(function () {
+      // console.log(obj);
+    }); //执行回调
+    ro.start();
+  }
+
   // 渲染
   render(): void {
     if (this.renderer && this.scene && this.camera) {
@@ -450,7 +462,7 @@ export class ThreeJs {
         this.mesh.rotation.z += 0.01;
       }
 
-      // 更新控制器
+      // 更新轨道控制器
       if (this.orbitcontrols) {
         this.orbitcontrols.update();
       }
@@ -458,11 +470,15 @@ export class ThreeJs {
       if (this.stats) {
         this.stats.update();
       }
-      //获取上一帧到当前帧的时间差
+      //获取上一帧到当前帧的时间差;
       const dt = this.clock.getDelta();
 
       // 动画混合器平滑的更新和混合动画
       if (this.mixer) this.mixer.update(dt);
+
+      // 更新tween缓动
+      TWEEN.update();
+
       // 调用 render() 方法来进行场景的渲染
       this.render();
     }
