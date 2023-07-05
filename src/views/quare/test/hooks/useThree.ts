@@ -223,7 +223,7 @@ export class ThreeJs {
   // 创建点光源:类似灯泡
   setPointLight(): void {
     if (this.scene) {
-      this.pointLight = new THREE.PointLight(0xffee88, 1, 100, 2);
+      this.pointLight = new THREE.PointLight("#ffffff", 1, 100, 2);
       const bulbGeometry = new THREE.SphereGeometry(0.5, 16, 16);
       const bulbMat = new THREE.MeshStandardMaterial({
         emissive: 0xffffee,
@@ -318,6 +318,9 @@ export class ThreeJs {
       this.stats.domElement.style.right = "unset";
       this.stats.domElement.style.top = "unset";
       this.stats.domElement.style.bottom = "24px";
+      this.stats.domElement.addEventListener("mousedown", e => {
+        e.stopPropagation();
+      });
       this.container.appendChild(this.stats.dom);
     }
   }
@@ -338,6 +341,9 @@ export class ThreeJs {
     const gui = new GUI();
     gui.domElement.style.right = "24px";
     gui.domElement.style.top = "110px";
+    gui.domElement.addEventListener("mousedown", e => {
+      e.stopPropagation();
+    });
     this.container.appendChild(gui.domElement);
     // 建立动画混合器
     this.mixer = new THREE.AnimationMixer(model);

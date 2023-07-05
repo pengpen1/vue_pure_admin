@@ -48,12 +48,15 @@ const setRotation = (currentRotation, preRotation, rotationObj) => {
 // keyDown事件
 let preRotation = 40; //之前朝向的键码，默认朝下,40
 let moveDistance = 1; // 每次移动的距离
+let currentState = "Walking";
 const keyDownHandle = throttle(event => {
   if (tsetThree) {
     switch (event.keyCode) {
       case 65:
       case 37: // 左箭头键
-        // tsetThree.fadeToAction("Walking", 0.2);
+        if (currentState !== "Walking" && currentState !== "Running") {
+          tsetThree.fadeToAction("Walking", 0.2);
+        }
         // 成功进行转向动作就不进行移动动作了
         if (!setRotation(37, preRotation, tsetThree.model.rotation)) {
           tsetThree.setTweens(
@@ -69,6 +72,9 @@ const keyDownHandle = throttle(event => {
         break;
       case 87:
       case 38: // 上箭头键
+        if (currentState !== "Walking" && currentState !== "Running") {
+          tsetThree.fadeToAction("Walking", 0.2);
+        }
         if (!setRotation(38, preRotation, tsetThree.model.rotation)) {
           tsetThree.setTweens(
             tsetThree.model.position,
@@ -83,7 +89,9 @@ const keyDownHandle = throttle(event => {
         break;
       case 68:
       case 39: // 右箭头键
-        // tsetThree.fadeToAction("Dance", 0.2);
+        if (currentState !== "Walking" && currentState !== "Running") {
+          tsetThree.fadeToAction("Walking", 0.2);
+        }
         // 动画
         console.log("动画过渡向右");
         if (!setRotation(39, preRotation, tsetThree.model.rotation)) {
@@ -100,7 +108,9 @@ const keyDownHandle = throttle(event => {
         break;
       case 83:
       case 40: // 下箭头键
-        //   tsetThree.fadeToAction("Idle", 0.2);
+        if (currentState !== "Walking" && currentState !== "Running") {
+          tsetThree.fadeToAction("Walking", 0.2);
+        }
         if (!setRotation(40, preRotation, tsetThree.model.rotation)) {
           tsetThree.setTweens(
             tsetThree.model.position,
@@ -115,22 +125,28 @@ const keyDownHandle = throttle(event => {
         break;
       case 32: // 空格
         tsetThree.fadeToAction("Jump", 0.2);
+        currentState = "Jump";
         break;
       case 73: // i
         tsetThree.fadeToAction("Walking", 0.2);
+        currentState = "Walking";
         moveDistance = 1;
         break;
       case 74: // j
         tsetThree.fadeToAction("Punch", 0.2);
+        currentState = "Punch";
         break;
       case 75: // k
         tsetThree.fadeToAction("ThumbsUp", 0.2);
+        currentState = "ThumbsUp";
         break;
       case 76: // l
         tsetThree.fadeToAction("Wave", 0.2);
+        currentState = "Wave";
         break;
       case 79: // o
         tsetThree.fadeToAction("Running", 0.2);
+        currentState = "Running";
         moveDistance = 4;
         break;
       default:
@@ -144,6 +160,64 @@ onMounted(() => {
   tsetThree = new ThreeJs(containerEl.value);
   window.addEventListener("resize", resizeHandle);
   window.addEventListener("keydown", keyDownHandle);
+  containerEl.value.addEventListener("mousedown", e => {
+    // 左键0，滑轮1，右键2
+    console.log("点击", e.button);
+    switch (e.button) {
+      case 0:
+        tsetThree.fadeToAction("Punch", 0.2);
+        currentState = "Punch";
+        break;
+      case 1:
+        // 将月亮放置模型上方
+        tsetThree.setTweens(
+          tsetThree.pointLight.position,
+          {
+            x: tsetThree.model.position.x,
+            y: tsetThree.model.position.y + 8,
+            z: tsetThree.model.position.z
+          },
+          1000
+        );
+        break;
+      case 2:
+        // 向前方瞬移
+        if (preRotation === 40) {
+          tsetThree.setTweens(
+            tsetThree.model.position,
+            {
+              z: tsetThree.model.position.z + 5
+            },
+            200
+          );
+        } else if (preRotation === 39) {
+          tsetThree.setTweens(
+            tsetThree.model.position,
+            {
+              x: tsetThree.model.position.x + 5
+            },
+            200
+          );
+        } else if (preRotation === 38) {
+          tsetThree.setTweens(
+            tsetThree.model.position,
+            {
+              z: tsetThree.model.position.z - 5
+            },
+            200
+          );
+        } else if (preRotation === 37) {
+          tsetThree.setTweens(
+            tsetThree.model.position,
+            {
+              x: tsetThree.model.position.x - 5
+            },
+            200
+          );
+        }
+        break;
+    }
+  });
 });
 
 onBeforeUnmount(() => {
@@ -163,7 +237,7 @@ onBeforeUnmount(() => {
       晋升：建模<br />
       <br />
       操作介绍：w、a、s、d移动，j攻击，k点赞，l打招呼<br />
-      i走路模式，o跑步模式
+      i走路模式，o跑步模式，左键攻击，右键瞬移，点击滚轮召唤月亮
     </p>
     <div ref="containerEl" class="containerEl" />
   </div>
