@@ -1,85 +1,35 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
+import {
+  drawSnake,
+  drawRect,
+  drawLine,
+  drawFace,
+  drawBubble,
+  drawTriangle
+} from "./hooks/usePratice1";
+import { drawDashLine, drawGradientRect, drawWord } from "./hooks/usePratice2";
+import { Sphere } from "./hooks/usePratice3";
+
 defineOptions({
   name: "draw"
 });
 const canvasEl = ref();
+const canvasEl2 = ref();
+const canvasEl3 = ref();
 let offset = 0;
 // 2D上下文
-let ctx = null;
-// 画矩形
-const drawRect = (ctx, x, y, width, height, color) => {
-  ctx.fillStyle = color; //不设置默认黑色
-  ctx.fillRect(x, y, width, height);
-  ctx.clearRect(x + 20, y + 20, 60, 60); //通过设置透明清空区域
-  ctx.strokeRect(x + 40, y + 40, 20, 20); //描边矩形
-};
-// 画线
-const drawLine = (ctx, x1, y1, x2, y2, color = "black") => {
-  ctx.beginPath(); // start a new path
-  ctx.moveTo(x1, y1); // move to (x1,y1)
-  ctx.lineTo(x2, y2); // line to (x2,y2)
-  ctx.closePath();
-  ctx.strokeStyle = color; // stroke color set later in draw function.
-  ctx.stroke();
-};
-// 画笑脸
-const drawFace = (ctx, color = "blue") => {
-  // moveTo就是移动笔触，想想你在画板上作画的样子
-  ctx.beginPath();
-  // ctx.lineWidth = 4;
-  ctx.arc(75, 75, 50, 0, Math.PI * 2, true); // 绘制
-  ctx.moveTo(110, 75);
-  ctx.arc(75, 75, 35, Math.PI / 4, -Math.PI * 1.25, false); // 口 (顺时针)
-  ctx.moveTo(65, 65);
-  ctx.arc(60, 65, 5, 0, Math.PI * 2, true); // 左眼
-  ctx.moveTo(95, 65);
-  ctx.arc(90, 65, 5, 0, Math.PI * 2, true); // 右眼
-  ctx.strokeStyle = color; // stroke color set later in draw function.
-  ctx.stroke();
-};
+let ctx: CanvasRenderingContext2D | null = null;
+let ctx2: CanvasRenderingContext2D | null = null;
+let ctx3: CanvasRenderingContext2D | null = null;
 
-// 画三角形
-const drawTriangle = (ctx, x1, y1, x2, y2, x3, y3, color = "black") => {
-  // ctx.beginPath();
-  const trianglePath = new Path2D();
-  trianglePath.moveTo(x1, y1); // move to
-  trianglePath.lineTo(x2, y2);
-  trianglePath.lineTo(x3, y3);
-  ctx.fillStyle = color;
-  ctx.fill();
-  return trianglePath;
-};
-
-// 画气泡框
-const drawBubble = (ctx, color = "black") => {
-  ctx.beginPath();
-  ctx.moveTo(75, 25);
-  ctx.quadraticCurveTo(25, 25, 25, 62.5);
-  ctx.quadraticCurveTo(25, 100, 50, 100);
-  ctx.quadraticCurveTo(50, 120, 30, 125);
-  ctx.quadraticCurveTo(60, 120, 65, 100);
-  ctx.quadraticCurveTo(125, 100, 125, 62.5);
-  ctx.quadraticCurveTo(125, 25, 75, 25);
-  ctx.closePath();
-  ctx.fillStyle = color;
-  ctx.stroke();
-};
-
-// 画蚂蚁线
-const drawSnake = (ctx, canvasEl, color = "black") => {
-  ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
-  ctx.setLineDash([4, 2]);
-  ctx.lineDashOffset = -offset;
-  ctx.strokeStyle = color;
-  ctx.strokeRect(10, 10, 100, 100);
-};
 // 动画
+let animationKey: any = null;
 const animation = () => {
-  requestAnimationFrame(() => {
+  animationKey = requestAnimationFrame(() => {
     animation();
     offset += 0.5;
-    drawSnake(ctx, canvasEl.value, "red");
+    drawSnake(ctx, canvasEl.value, offset, "red");
   });
 };
 onMounted(() => {
@@ -97,20 +47,54 @@ onMounted(() => {
   ctx.fill(trianglePath); // fill the path object.
   drawBubble(ctx);
   animation();
+
+  // 测试虚线偏移量
+  const canvas2: HTMLCanvasElement = document.getElementById(
+    "testCanvas2"
+  ) as HTMLCanvasElement;
+  ctx2 = canvas2.getContext("2d") as CanvasRenderingContext2D;
+  // ctx2.rotate(Math.PI / 2);
+  ctx2.scale(0.5, 0.5);
+  drawDashLine(ctx2, "red");
+  drawGradientRect(ctx2);
+  drawWord(ctx2, "当前只是学习canvas，绘图功能待定");
+
+  // 高级动画
+  ctx3 = canvasEl3.value.getContext("2d");
+  const sphere = new Sphere(ctx3, canvasEl3.value);
+  sphere.init();
+});
+onUnmounted(() => {
+  cancelAnimationFrame(animationKey);
 });
 </script>
 
 <template>
   <div class="draw">
-    <h2>绘图</h2>
-    <canvas width="500" height="300" id="testCanvas" ref="canvasEl" />
+    <div class="top_content">
+      <canvas width="500" height="300" id="testCanvas" ref="canvasEl" />
+      <canvas width="500" height="300" id="testCanvas3" ref="canvasEl3" />
+    </div>
+    <canvas width="1000" height="500" id="testCanvas2" ref="canvasEl2" />
   </div>
 </template>
 
 <style lang="scss" scoped>
 .draw {
-  #testCanvas {
-    margin: 50px auto;
+  background-color: #fff;
+  .top_content {
+    margin-top: 10px;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    canvas {
+      border: 1px solid black;
+      background-color: #d6f7c9;
+    }
+  }
+  #testCanvas2 {
+    margin: 10px auto;
     border: 1px solid black;
     background-color: #d6f7c9;
   }

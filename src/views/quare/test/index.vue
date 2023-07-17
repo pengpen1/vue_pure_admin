@@ -154,70 +154,71 @@ const keyDownHandle = throttle(event => {
     }
   }
 }, 800);
+const mousedownHandle = e => {
+  // 左键0，滑轮1，右键2
+  console.log("点击", e.button);
+  switch (e.button) {
+    case 0:
+      tsetThree.fadeToAction("Punch", 0.2);
+      currentState = "Punch";
+      break;
+    case 1:
+      // 将月亮放置模型上方
+      tsetThree.setTweens(
+        tsetThree.pointLight.position,
+        {
+          x: tsetThree.model.position.x,
+          y: tsetThree.model.position.y + 8,
+          z: tsetThree.model.position.z
+        },
+        1000
+      );
+      break;
+    case 2:
+      // 向前方瞬移
+      if (preRotation === 40) {
+        tsetThree.setTweens(
+          tsetThree.model.position,
+          {
+            z: tsetThree.model.position.z + 5
+          },
+          200
+        );
+      } else if (preRotation === 39) {
+        tsetThree.setTweens(
+          tsetThree.model.position,
+          {
+            x: tsetThree.model.position.x + 5
+          },
+          200
+        );
+      } else if (preRotation === 38) {
+        tsetThree.setTweens(
+          tsetThree.model.position,
+          {
+            z: tsetThree.model.position.z - 5
+          },
+          200
+        );
+      } else if (preRotation === 37) {
+        tsetThree.setTweens(
+          tsetThree.model.position,
+          {
+            x: tsetThree.model.position.x - 5
+          },
+          200
+        );
+      }
+      break;
+  }
+};
 
 // 生命周期
 onMounted(() => {
   tsetThree = new ThreeJs(containerEl.value);
   window.addEventListener("resize", resizeHandle);
   window.addEventListener("keydown", keyDownHandle);
-  containerEl.value.addEventListener("mousedown", e => {
-    // 左键0，滑轮1，右键2
-    console.log("点击", e.button);
-    switch (e.button) {
-      case 0:
-        tsetThree.fadeToAction("Punch", 0.2);
-        currentState = "Punch";
-        break;
-      case 1:
-        // 将月亮放置模型上方
-        tsetThree.setTweens(
-          tsetThree.pointLight.position,
-          {
-            x: tsetThree.model.position.x,
-            y: tsetThree.model.position.y + 8,
-            z: tsetThree.model.position.z
-          },
-          1000
-        );
-        break;
-      case 2:
-        // 向前方瞬移
-        if (preRotation === 40) {
-          tsetThree.setTweens(
-            tsetThree.model.position,
-            {
-              z: tsetThree.model.position.z + 5
-            },
-            200
-          );
-        } else if (preRotation === 39) {
-          tsetThree.setTweens(
-            tsetThree.model.position,
-            {
-              x: tsetThree.model.position.x + 5
-            },
-            200
-          );
-        } else if (preRotation === 38) {
-          tsetThree.setTweens(
-            tsetThree.model.position,
-            {
-              z: tsetThree.model.position.z - 5
-            },
-            200
-          );
-        } else if (preRotation === 37) {
-          tsetThree.setTweens(
-            tsetThree.model.position,
-            {
-              x: tsetThree.model.position.x - 5
-            },
-            200
-          );
-        }
-        break;
-    }
-  });
+  containerEl.value.addEventListener("mousedown", mousedownHandle);
 });
 
 onBeforeUnmount(() => {

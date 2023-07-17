@@ -8,6 +8,7 @@ import { configCompressPlugin } from "./compress";
 // import ElementPlus from "unplugin-element-plus/vite";
 import { visualizer } from "rollup-plugin-visualizer";
 import removeConsole from "vite-plugin-remove-console";
+import { prismjsPlugin } from "vite-plugin-prismjs";
 import themePreprocessorPlugin from "@pureadmin/theme";
 import { genScssMultipleScopeVars } from "../src/layout/theme";
 
@@ -22,6 +23,31 @@ export function getPluginsList(
     vue(),
     // jsx、tsx语法支持
     vueJsx(),
+    [
+      "prismjs",
+      {
+        languages: ["javascript", "css", "markup"],
+        plugins: [
+          "line-numbers",
+          "show-language",
+          "copy-to-clipboard",
+          "inline-color"
+        ], //配置显示行号插件
+        theme: "okaidia", //主体名称
+        css: true
+      }
+    ],
+    prismjsPlugin({
+      languages: "all", // 语言
+      plugins: [
+        "line-numbers",
+        "show-language",
+        "copy-to-clipboard",
+        "inline-color"
+      ],
+      theme: "twilight", // 主题
+      css: true
+    }),
     VITE_CDN ? cdn : null,
     configCompressPlugin(VITE_COMPRESSION),
     // 线上环境删除console
