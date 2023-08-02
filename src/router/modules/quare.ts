@@ -31,6 +31,14 @@ export default {
       meta: {
         title: "怪兽"
       }
+    },
+    {
+      path: "/quare/travel",
+      name: "travel",
+      component: () => import("@/views/quare/travel/index.vue"),
+      meta: {
+        title: "时空穿梭"
+      }
     }
   ]
 } as RouteConfigsTable;
